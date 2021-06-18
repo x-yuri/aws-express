@@ -1,0 +1,26 @@
+name: deploy
+on: [push]
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    env:
+      USER_HOST: ubuntu@ec2-54-93-248-16.eu-central-1.compute.amazonaws.com
+      HOST_KEY: ec2-54-93-248-16.eu-central-1.compute.amazonaws.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCZSby1ygE7k+0Py1TZzSpMwepocOCy83Y/50kXkOwnmTB5nahDvP+Og803UkIJxaJby+HyqN35wjd1NzKc1A9Y=
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Run ssh-agent
+        uses: webfactory/ssh-agent@v0.5.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add the host key to ~/.ssh/known_hosts
+        run: |
+          echo "$HOST_KEY" >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        run: |
+          set -x
+          BRANCH=${GITHUB_REF#refs/heads/}
+          cat .github/deploy.sh | ssh -T "$USER_HOST" sh -s "$BRANCH"
