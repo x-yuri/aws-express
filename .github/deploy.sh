@@ -1,4 +1,4 @@
-set -eux
+set -euxo pipefail
 branch=$1
 if ! [ -e app ]; then
     git clone git@github.com:x-yuri/aws-express.git app
@@ -7,7 +7,7 @@ cd app
 git checkout "$branch"
 git pull --rebase origin "$branch"
 dc() {
-    docker-compose -p "$USER" -f docker-compose-production.yml "$@";
+    sudo /usr/local/bin/docker-compose -p "$USER" -f docker-compose-production.yml "$@";
 }
 dc build
 dc up -d
