@@ -10,17 +10,18 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v2
 
-      - name: Run ssh-agent
-        uses: webfactory/ssh-agent@v0.5.1
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add the host key to ~/.ssh/known_hosts
+      - name: Set up ssh
         run: |
+          set -x
+          mkdir ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 0600 ~/.ssh/id_rsa
           echo "$HOST_KEY" >> ~/.ssh/known_hosts
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy
         run: |
           set -x
           BRANCH=${GITHUB_REF#refs/heads/}
-          cat .github/deploy.sh | ssh -T "$USER_HOST" sh -s "$BRANCH"
+          cat .github/deploy.sh | ssh -Ti ~/.ssh/id_rsa "$USER_HOST" sh -s "$BRANCH"
